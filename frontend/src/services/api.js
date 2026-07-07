@@ -21,9 +21,14 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor to handle token refresh on 401 Unauthorized
+// Response interceptor to handle token refresh on 401 Unauthorized and unwrap paginated DRF responses
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.data && typeof response.data === 'object' && Array.isArray(response.data.results) && response.data.count !== undefined) {
+      response.data = response.data.results;
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
     if (error.response?.status === 401 && !originalRequest._retry) {
