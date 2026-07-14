@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Camera, Plus, Edit2, Trash2, X, CheckCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import api from '../../services/api';
 
 export default function AdminGallery() {
   const [gallery, setGallery] = useState([]);
@@ -22,10 +22,7 @@ export default function AdminGallery() {
   const fetchGallery = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('access_token');
-      const res = await axios.get('http://127.0.0.1:8000/api/v1/admin/gallery/', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.get('admin/gallery/');
       setGallery(res.data);
     } catch (err) {
       setError("Failed to fetch media gallery.");
@@ -67,10 +64,7 @@ export default function AdminGallery() {
   const handleDelete = async (id, title) => {
     if (!window.confirm(`Delete media album "${title}"?`)) return;
     try {
-      const token = localStorage.getItem('access_token');
-      await axios.delete(`http://127.0.0.1:8000/api/v1/admin/gallery/${id}/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`admin/gallery/${id}/`);
       setSuccess(`Album "${title}" deleted.`);
       fetchGallery();
     } catch (err) {
@@ -82,13 +76,11 @@ export default function AdminGallery() {
     e.preventDefault();
     setError("");
     try {
-      const token = localStorage.getItem('access_token');
-      const headers = { Authorization: `Bearer ${token}` };
       if (editingId) {
-        await axios.patch(`http://127.0.0.1:8000/api/v1/admin/gallery/${editingId}/`, formData, { headers });
+        await api.patch(`admin/gallery/${editingId}/`, formData);
         setSuccess("Media album updated.");
       } else {
-        await axios.post('http://127.0.0.1:8000/api/v1/admin/gallery/', formData, { headers });
+        await api.post('admin/gallery/', formData);
         setSuccess("New media album published.");
       }
       setModalOpen(false);

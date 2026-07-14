@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { MessageSquareQuote, Plus, Edit2, Trash2, X, CheckCircle, AlertCircle, RefreshCw, Star } from 'lucide-react';
+import api from '../../services/api';
 
 export default function AdminTestimonials() {
   const [testimonials, setTestimonials] = useState([]);
@@ -23,10 +23,7 @@ export default function AdminTestimonials() {
   const fetchTestimonials = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('access_token');
-      const res = await axios.get('http://127.0.0.1:8000/api/v1/admin/testimonials/', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.get('admin/testimonials/');
       setTestimonials(res.data);
     } catch (err) {
       setError("Failed to fetch testimonials.");
@@ -70,10 +67,7 @@ export default function AdminTestimonials() {
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Delete testimonial from "${name}"?`)) return;
     try {
-      const token = localStorage.getItem('access_token');
-      await axios.delete(`http://127.0.0.1:8000/api/v1/admin/testimonials/${id}/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`admin/testimonials/${id}/`);
       setSuccess("Testimonial deleted.");
       fetchTestimonials();
     } catch (err) {
@@ -85,13 +79,11 @@ export default function AdminTestimonials() {
     e.preventDefault();
     setError("");
     try {
-      const token = localStorage.getItem('access_token');
-      const headers = { Authorization: `Bearer ${token}` };
       if (editingId) {
-        await axios.patch(`http://127.0.0.1:8000/api/v1/admin/testimonials/${editingId}/`, formData, { headers });
+        await api.patch(`admin/testimonials/${editingId}/`, formData);
         setSuccess("Testimonial updated.");
       } else {
-        await axios.post('http://127.0.0.1:8000/api/v1/admin/testimonials/', formData, { headers });
+        await api.post('admin/testimonials/', formData);
         setSuccess("New testimonial added.");
       }
       setModalOpen(false);

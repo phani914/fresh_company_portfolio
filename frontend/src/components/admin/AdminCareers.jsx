@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Briefcase, UserCheck, Plus, Edit2, Trash2, X, CheckCircle, AlertCircle, RefreshCw, FileText, Download, Eye } from 'lucide-react';
+import api, { mediaUrl } from '../../services/api';
 
 export default function AdminCareers() {
   const [activeTab, setActiveTab] = useState("openings"); // "openings" or "applications"
@@ -27,11 +27,9 @@ export default function AdminCareers() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('access_token');
-      const headers = { Authorization: `Bearer ${token}` };
       const [openingsRes, appsRes] = await Promise.all([
-        axios.get('http://127.0.0.1:8000/api/v1/admin/careers/', { headers }),
-        axios.get('http://127.0.0.1:8000/api/v1/admin/applications/', { headers }),
+        api.get('admin/careers/'),
+        api.get('admin/applications/'),
       ]);
       setOpenings(openingsRes.data);
       setApplications(appsRes.data);
@@ -79,10 +77,7 @@ export default function AdminCareers() {
   const handleDeleteOpening = async (id, title) => {
     if (!window.confirm(`Delete job opening "${title}"?`)) return;
     try {
-      const token = localStorage.getItem('access_token');
-      await axios.delete(`http://127.0.0.1:8000/api/v1/admin/careers/${id}/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`admin/careers/${id}/`);
       setSuccess(`Job opening "${title}" deleted.`);
       fetchData();
     } catch (err) {
@@ -94,13 +89,11 @@ export default function AdminCareers() {
     e.preventDefault();
     setError("");
     try {
-      const token = localStorage.getItem('access_token');
-      const headers = { Authorization: `Bearer ${token}` };
       if (editingId) {
-        await axios.patch(`http://127.0.0.1:8000/api/v1/admin/careers/${editingId}/`, formData, { headers });
+        await api.patch(`admin/careers/${editingId}/`, formData);
         setSuccess("Job opening updated successfully.");
       } else {
-        await axios.post('http://127.0.0.1:8000/api/v1/admin/careers/', formData, { headers });
+        await api.post('admin/careers/', formData);
         setSuccess("New job opening published.");
       }
       setModalOpen(false);
@@ -112,10 +105,7 @@ export default function AdminCareers() {
 
   const handleUpdateAppStatus = async (appId, newStatus) => {
     try {
-      const token = localStorage.getItem('access_token');
-      await axios.patch(`http://127.0.0.1:8000/api/v1/admin/applications/${appId}/`, { status_state: newStatus }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.patch(`admin/applications/${appId}/`, { status_state: newStatus });
       setSuccess(`Application status changed to ${newStatus}.`);
       setApplications(applications.map(a => a.id === appId ? { ...a, status_state: newStatus } : a));
       if (selectedApp && selectedApp.id === appId) {
@@ -258,7 +248,7 @@ export default function AdminCareers() {
                       <td className="py-4 px-6 font-semibold text-slate-200">{app.job_opening_title}</td>
                       <td className="py-4 px-6">
                         {app.resume_file ? (
-                          <a href={`http://127.0.0.1:8000${app.resume_file}`} target="_blank" rel="noreferrer" className="btn btn-secondary !py-1 !px-2.5 text-xs flex items-center gap-1 text-emerald-400">
+                          <a href={mediaUrl(app.resume_file)} target="_blank" rel="noreferrer" className="btn btn-secondary !py-1 !px-2.5 text-xs flex items-center gap-1 text-emerald-400">
                             <Download className="w-3.5 h-3.5" />
                             <span>CV File</span>
                           </a>
@@ -406,7 +396,7 @@ export default function AdminCareers() {
                     <span className="text-xs text-slate-400">Click download to inspect candidate CV file.</span>
                   </div>
                   <a
-                    href={`http://127.0.0.1:8000${selectedApp.resume_file}`}
+                    href={mediaUrl(selectedApp.resume_file)}
                     target="_blank"
                     rel="noreferrer"
                     className="btn btn-primary !py-2 !px-4 text-xs flex items-center gap-1.5"

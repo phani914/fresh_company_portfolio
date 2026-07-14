@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api/v1/';
+export const API_BASE_ORIGIN = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000').replace(/\/+$/, '');
+export const API_BASE_URL = `${API_BASE_ORIGIN}/api/v1/`;
+export const mediaUrl = (path) => {
+  if (!path) return '';
+  return path.startsWith('http') ? path : `${API_BASE_ORIGIN}${path}`;
+};
 
 const api = axios.create({
   baseURL: API_BASE_URL,

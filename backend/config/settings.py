@@ -37,7 +37,11 @@ SECRET_KEY = get_secret("SECRET_KEY", "django_secret.txt")
 
 DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "yes")
 
-ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",") if host.strip()]
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost,.vercel.app").split(",")
+    if host.strip()
+]
 if DEBUG:
     ALLOWED_HOSTS.extend(["*"])
 
@@ -60,9 +64,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -155,10 +159,24 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # In DEBUG mode allow local Vite dev servers
+frontend_url = os.getenv("FRONTEND_URL", "").strip().rstrip("/")
+cors_origins = os.getenv("CORS_ALLOWED_ORIGINS", "")
 CORS_ALLOWED_ORIGINS = [
+    origin.strip().rstrip("/")
+    for origin in cors_origins.split(",")
+    if origin.strip()
+] or [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:3000",
+]
+if frontend_url and frontend_url not in CORS_ALLOWED_ORIGINS:
+    CORS_ALLOWED_ORIGINS.append(frontend_url)
+
+CSRF_TRUSTED_ORIGINS = [
+    origin
+    for origin in [frontend_url, *CORS_ALLOWED_ORIGINS]
+    if origin.startswith("https://")
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -194,4 +212,3 @@ SIMPLE_JWT = {
     "SIGNING_KEY": get_secret("JWT_SECRET_KEY", "jwt_secret.txt"),
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
-
